@@ -1,0 +1,54 @@
+#' This is a function to create a table with multiple enteries for a single animal within a survival period
+#' you can get daily, weekly, or monthly entries, which you can then relate to changes in the animal
+#' across time (e.g., differences in weekly or monthly movement rates, if they have offspring with them, etc.)
+
+survival.dynamic.interval <- function(data, ## survival data from previous function
+                                    time.int = "weeks", ## time.int can be 'days', 'weeks', or 'months'
+                                    survival.period = "period", ## name of the column that identifies the different survival periods
+                                    id = "AID" ## unique identifier for each animal
+                                    )
+{
+  result.list <- list()
+  
+  for (i in unique(data[[survival.period]])) {
+    
+    sub.data <- data[data[[survival.period]] == i, ]
+    
+    for (j in 1:nrow(sub.data)) {
+      
+      tmp <- sub.data[j, ]
+      
+      if (time.int %in% c("days", "weeks", "months")) {
+        
+        if(as.Date(tmp$StartDate)==as.Date(tmp$EndDate)){
+          
+          print(paste0("Animal " ,tmp[[id]], " in period ", i, " died on the same day the season started. Did not create a dynamic dataframe for that animal."))
+        
+          }else{
+      
+        
+        date.seq <- seq(as.Date(tmp$StartDate),
+                        as.Date(tmp$EndDate) - 1,
+                        by = paste0("1 ", time.int))
+        
+        tmp2 <- data.frame(id = tmp[[id]],
+                             StartDate = date.seq,
+                             EndDate = c(date.seq[2:length(date.seq)], as.Date(tmp$EndDate))-1)
+        tmp2$StartNum <- 1:nrow(tmp2)
+        tmp2$EndNum <- 2:(nrow(tmp2) + 1)
+        tmp2$death <- ifelse(tmp$death == 1 & tmp$EndDate == tmp2$EndDate, 1, 0)
+        tmp2$Year <- sub.data[[survival.period]][1]
+        result.list[[length(result.list) + 1]] <- tmp2
+        
+        }
+        
+      } else {
+        stop("Not a Valid Time Interval")
+      }
+    }
+  }
+  
+  # Combine the results into a single dataframe
+  final.result <- do.call(rbind, result.list)
+  return(final.result)
+}
