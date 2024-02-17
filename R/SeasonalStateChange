@@ -1,0 +1,79 @@
+#' This function calculates changes in metrics (fat, disease status, weight, etc.) 
+#' across different seasons. 
+
+seasonalchange <- function(data, ## data frame of data collected on capture
+                           capdate_col = "CapDate", ## name of the capture date column
+                           change.metrics = c("scaledIFBFat", "Netweightkg", "IFFFLeanMass"), ## metrics that tell you change across seasons
+                           season1.metrics = c("Sex", "Age2"), ## metrics you want to retain in the dataframe from the first season
+                           season2.metrics = c("Preg", "FetalNum"), ## metrics you want to reatin in the dataframe from the second season
+                           season1.months = 12, ## this is any of the months you captured animals in the first season
+                           season2.months = c(3:4), ## this is any of the months you captured animals in the second season
+                           year.change = TRUE, ## this means that the seasonal change you're interested in occurs across a year
+                           season1.name = "winter", ## name for the first season
+                           season2.name = "spring", ## name for the second season
+                           id = "AID" ## unique identifier for animals
+                           ){
+  
+  if (!inherits(data[[capdate_col]], "POSIXct")) 
+    stop("Capture Date Column is not a POSIXct!")  
+  
+  if (any(is.na(data[[capdate_col]]))) 
+    stop("NAs in the Capture Date Column!")  
+  
+  if(any(season1.metrics %in% season2.metrics))
+    stop("At least one name of the unique columns you want to keep for one season matches a name in the other season")  
+  
+  if(any(season1.metrics %in% colnames(data))==FALSE)
+    stop("At least one of your season 1 metrics does not exist in your dataframe")  
+  
+  if(any(season2.metrics %in% colnames(data))==FALSE)
+    stop("At least one of your season 2 metrics does not exist in your dataframe")  
+  
+  if(any(grepl("_", change.metrics))){
+    print("Your change metrics had a `_` in it, it was replaced with `.` in this function.")  
+    change.metrics <- gsub("_", ".", change.metrics)
+  } 
+    
+  
+  data$month <- lubridate::month(data[[capdate_col]])
+  season1 <- data[data$month %in% season1.months,]
+  season2 <- data[data$month %in% season2.months,]
+  
+  if(year.change==TRUE){
+  
+    ## give them both the same year to merge them together eventually
+    season1$mergeyear <- lubridate::year(season1[[capdate_col]])
+    season2$mergeyear <- lubridate::year(season2[[capdate_col]]) - 1
+    
+    }else{
+    
+      ## give them both the same year to merge them together eventually
+      season1$mergeyear <- lubridate::year(season1[[capdate_col]])
+      season2$mergeyear <- lubridate::year(season2[[capdate_col]])
+      
+    
+    }
+    
+    season1.change <- season1[, change.metrics]
+    colnames(season1.change) <- paste0(colnames(season1.change), "_", season1.name)
+    season1.change <- cbind(season1.change, season1[, season1.metrics])
+    season1.change[[id]] <- season1[[id]]
+    season1.change$mergeyear <- season1$mergeyear
+    season1.change[[paste0(season1.name, "_monthyear")]] <- paste0(season1$month, "-", lubridate::year(season1[[capdate_col]]))
+    
+    season2.change <- season2[, change.metrics]
+    colnames(season2.change) <- paste0(colnames(season2.change), "_", season2.name)
+    season2.change <- cbind(season2.change, season2[, season2.metrics])
+    season2.change[[id]] <- season2[[id]]
+    season2.change$mergeyear <- season2$mergeyear
+    season2.change[[paste0(season2.name, "_monthyear")]] <- paste0(season2$month, "-", lubridate::year(season2[[capdate_col]]))
+    
+    season.change <- merge(season1.change, season2.change, by = c("mergeyear", "AID"))
+    
+    for(i in change.metrics){
+      
+      season.change[[paste0(i, "_change")]] <- season.change[,colnames(season.change) %in% paste0(i, "_", season2.name)] - season.change[,colnames(season.change) %in% paste0(i, "_", season1.name)]
+    }
+  
+  return(season.change)
+}
