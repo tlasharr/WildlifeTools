@@ -1,6 +1,7 @@
 #' This is a function to create a table with multiple enteries for a single animal within a survival period
 #' you can get daily, weekly, or monthly entries, which you can then relate to changes in the animal
 #' across time (e.g., differences in weekly or monthly movement rates, if they have offspring with them, etc.)
+#' This will work best if you've run the 'PrepAdultSurvival' function first.
 
 survival.dynamic.interval <- function(data, ## survival data from previous function
                                     time.int = "weeks", ## time.int can be 'days', 'weeks', or 'months'
