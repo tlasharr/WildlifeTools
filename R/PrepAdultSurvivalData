@@ -1,7 +1,7 @@
 ## function to set up the survival data for adults
 ## you can run this for multiple years if you make s.yr and e.yr vectors
 
-surv.prep.func.fawns <- function(start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
+surv.prep.adults <- function(start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
                                       s.yr, ## the year for the start date
                                       end.date, ## start date for the season, formated 'b-d' (e.g., "Dec-31")
                                       e.yr, ## the year for the end date
