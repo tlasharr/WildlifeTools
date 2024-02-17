@@ -76,7 +76,7 @@ require(lubridate)
       
       if (sameage==FALSE){
         if(any(is.na(data[[bcol]]))==TRUE)
-          stop(print("You are missing birth years in your dataframe, if you know they are adults, put in a fake birthyear"))
+          stop(print("You indicated that there are both juveniles and adults in the dataframe but you are missing birth years. Add birth years so we can remove any juveniles." ))
         
         ## next, remove non adults from the dataframe
         data <- data[!data$BirthYear==s.yr[i],]
