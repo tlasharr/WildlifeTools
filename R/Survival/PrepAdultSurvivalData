@@ -1,5 +1,11 @@
-#' function to set up the survival data for adults
-#' you can run this for multiple years if you make s.yr and e.yr vectors
+#' Function to organize survival data for adults.
+
+#' You can run this for multiple years if you make s.yr and e.yr vectors (e.g., s.yr = 2015:2022)
+
+#' If your list of animals includes both juveniles and adults, you should set the 'sameage' argument to FALSE
+#' This will allow the function to remove animals during the survival period they were juveniles, but retain them 
+#' in future survival periods when they became adults. If you set that argument to FALSE, you will need to include
+#' a column that has birthyear. 
 
 #' The 'mid.season.enter' and 'days.enter' arguments are to deal with biases that can arise
 #' if you add in a bunch of animals half way through the survival period. By setting 'mid.season.enter'
@@ -18,9 +24,9 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
                              date_on_col = "StartDate", ## date the collar was deployed column
                              date_off_col = "EndDate", ## date the collar came off column
                              censor_col = "Censor", ## the censor column name
-                             bcol = "BirthYear", ## column that has birth year
                              id = "AID", ## column that unique identifier
                              sameage = FALSE, ## if you have differences in age classes in your data (i.e., juveniles and adults)
+                             bcol = "BirthYear", ## column that has birth year
                              surv.period = "bioyear", ## change this to whatever you want your time period to be labeled as (i.e., winter, summer, bioyear)
                              mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
                              days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
