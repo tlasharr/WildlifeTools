@@ -17,7 +17,9 @@ surv.prep.adults <- function(start.date, ## start date for the season, formated 
                                       days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
                                       ) 
   {
-  
+
+require(lubridate)
+
   if (any(duplicated(data[[id]]))){
     stop(print("You have duplicate IDs in your your dataframe."))
   }
