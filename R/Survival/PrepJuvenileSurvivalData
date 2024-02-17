@@ -13,6 +13,7 @@ surv.prep.juv <- function(yr, ## year
                                  id = "AID" ## column that unique identifier
 ) {
   require(lubridate)
+  require(dplyr)
 
   if (any(duplicated(data[[id]]))) {
     stop(print("You have duplicate IDs in your dataframe."))
