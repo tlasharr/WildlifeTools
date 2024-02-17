@@ -2,7 +2,7 @@
 #' across different seasons. 
 
 seasonalchange <- function(data, ## data frame of data collected on capture
-                           capdate_col = "CapDate", ## name of the capture date column
+                           capdate_col = "CapDate", ## name of the date column when the data were collected
                            change.metrics = c("scaledIFBFat", "Netweightkg", "IFFFLeanMass"), ## metrics that tell you change across seasons
                            season1.metrics = c("Sex", "Age2"), ## metrics you want to retain in the dataframe from the first season
                            season2.metrics = c("Preg", "FetalNum"), ## metrics you want to reatin in the dataframe from the second season
