@@ -1,0 +1,190 @@
+## function to set up the survival data for adults
+## you can run this for multiple years if you make s.yr and e.yr vectors
+
+surv.prep.func.fawns <- function(start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
+                                      s.yr, ## the year for the start date
+                                      end.date, ## start date for the season, formated 'b-d' (e.g., "Dec-31")
+                                      e.yr, ## the year for the end date
+                                      data, ## data with date_on_col, a date_off_col, a censor column
+                                      date_on_col = "StartDate", ## date the collar was deployed column
+                                      date_off_col = "EndDate", ## date the collar came off column
+                                      censor_col = "Censor", ## the censor column name
+                                      bcol = "BirthYear", ## column that has birth year
+                                      id = "AID", ## column that unique identifier
+                                      sameage = FALSE, ## if you have differences in age classes in your data (i.e., juveniles and adults)
+                                      surv.period = "bioyear", ## change this to whatever you want your time period to be labeled as (i.e., winter, summer, bioyear)
+                                      mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
+                                      days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
+                                      ) 
+  {
+  
+  if (any(duplicated(data[[id]]))){
+    stop(print("You have duplicate IDs in your your dataframe."))
+  }
+  
+  
+  if (!(censor_col %in% names(data))) {
+    stop(print("You have no Censor Column!"))
+  }
+  
+  
+  if(any(is.na(data[[date_off_col]]))){
+    print("There were NAs in the EndDate, they were filled in as today's date")
+    print("If you are running this for the current season and an animal died today, it will not be classified as dead until you run the function tomorrow.")
+    data[[date_off_col]] <- dplyr::if_else(is.na(data[[date_off_col]]), Sys.Date(), data[[date_off_col]])
+  }
+  
+  
+  if (length(s.yr) != length(e.yr)) {
+    stop("Your vector of start and end years are not the same length.")
+  }
+  
+  # Check if s.yr and e.yr are single values or vectors
+  if (!is.vector(s.yr) || !is.vector(e.yr)) {
+    stop("s.yr and e.yr must be vectors of years.")
+  }
+  
+  # If s.yr and e.yr are single values, convert them to vectors
+  if (!is.vector(s.yr)) {
+    s.yr <- rep(s.yr, length(e.yr))
+  }
+  if (!is.vector(e.yr)) {
+    e.yr <- rep(e.yr, length(s.yr))
+  }
+  
+  # Create a list to store results for each year
+  results_list <- list()
+  
+  # Iterate over the years
+  for (i in seq_along(s.yr)) {
+
+    inner_function <- function() {
+      if (!inherits(data[, date_on_col], "POSIXct")) 
+        stop("date_on_col is not a POSIXct!")
+      if (!inherits(data[, date_off_col], "POSIXct")) 
+        stop("date_off_col is not a POSIXct!")
+      
+      if (s.yr[i] > e.yr[i]){
+        stop(print("Your e.yr (End Year) if before your s.yr (Start Year)"))
+      }
+      
+      if (e.yr[i] - s.yr[i] >= 2){
+        stop(print("You're trying to look at a survival period of more than 1 year, are you sure you want to do that?"))
+      }
+      
+      if (sameage==FALSE){
+        if(any(is.na(data[[bcol]]))==TRUE)
+          stop(print("You are missing birth years in your dataframe, if you know they are adults, put in a fake birthyear"))
+        
+        ## next, remove non adults from the dataframe
+        data <- data[!data$BirthYear==s.yr[i],]
+        
+      } 
+      ## if the start and end year are the same (e.g., oversummer survival)
+      if(s.yr[i] == e.yr[i]){
+        
+        yr <- s.yr[i]
+        
+        ## get the start and end dates for the season
+        sdate <- as.POSIXct(paste0(yr, "-", start.date), format="%Y-%b-%d")
+        edate <- as.POSIXct(paste0(yr, "-", end.date), format="%Y-%b-%d")
+        
+        ## interval between the start and end
+        int <- lubridate::interval(sdate, edate)
+        
+        ## get all of the animals that were alive and in the study during this time
+        tmp <- data[data[[date_on_col]] < edate & data[[date_off_col]] > sdate,]
+        
+        ## if you are limiting the animals that can join the analyses, this 
+        ## is the part where it only allows animals that have a start date within
+        ## a certain number of days from the survival season start 
+        if(mid.season.enter==FALSE){
+          
+          tmp <- tmp[tmp$StartDate < sdate+(86400*days.enter),] ## get rid of all animals caught in the middle of the season
+          
+        }
+        
+        ## get the start and end date in the tmp data frame for the time period
+        ## we care about
+        tmp$StartDate <- dplyr::if_else(tmp[[date_on_col]] < sdate, 
+                                        as.POSIXct(sdate, format = '%Y-%m-%d'),
+                                        as.POSIXct(tmp[[date_on_col]], format = '%Y-%m-%d'))
+        
+        tmp$EndDate <- dplyr::if_else(tmp[[date_off_col]] > edate, 
+                                      as.POSIXct(edate, format = '%Y-%m-%d'),
+                                      as.POSIXct(tmp[[date_off_col]], format = '%Y-%m-%d'))
+        
+        tmp$death <- ifelse(tmp$EndDate<edate, 1, 0)
+        
+        ## this is to deal with the NAs in end dates for current animals
+        ## because we gave their end date today, if they are equal reclassify them as alive
+        tmp$death <- dplyr::if_else(tmp$EndDate==Sys.Date(), 0, tmp$death)
+        
+        ## this is very important, this will only censor the data if the end date
+        ## occurs in the time interval
+        tmp$death <- ifelse(tmp$EndDate %within% int & tmp[[censor_col]]==TRUE, 
+                            0, tmp$death)
+        
+        tmp$period <- paste0(surv.period, "_", yr)
+        
+      }   
+        ## if the start and end year are the different (e.g., overwinter survival)
+      else {
+        
+        ## get the start and end dates for the season
+        sdate <- as.POSIXct(paste0(s.yr[i], "-", start.date), format="%Y-%b-%d")
+        edate <- as.POSIXct(paste0(e.yr[i], "-", end.date), format="%Y-%b-%d")
+        
+        ## interval between the start and end
+        int <- lubridate::interval(sdate, edate)
+        
+        ## get all of the animals that were alive and in the study during this time
+        tmp <- data[data[[date_on_col]] < edate & data[[date_off_col]] > sdate,]
+        
+        ## if you are limiting the animals that can join the analyses, this 
+        ## is the part where it only allows animals that have a start date within
+        ## a certain number of days from the survival season start 
+        if(mid.season.enter==FALSE){
+          
+          tmp <- tmp[tmp$StartDate < sdate+(86400*days.enter),] ## get rid of all animals caught in the middle of the season
+          
+        }
+        ## get the start and end date in the tmp data frame for the time period
+        ## we care about
+        tmp$StartDate <- dplyr::if_else(tmp[[date_on_col]] < sdate, 
+                                        as.POSIXct(sdate, format = '%Y-%m-%d'),
+                                        as.POSIXct(tmp[[date_on_col]], format = '%Y-%m-%d'))
+        
+        tmp$EndDate <- dplyr::if_else(tmp[[date_off_col]] > edate, 
+                                      as.POSIXct(edate, format = '%Y-%m-%d'),
+                                      as.POSIXct(tmp[[date_off_col]], format = '%Y-%m-%d'))
+        
+        ## if their end date is before the end of the season, they get a 1
+        tmp$death <- ifelse(tmp$EndDate<edate, 1, 0)
+        
+        ## this is to deal with the NAs in end dates for current animals
+        ## because we gave their end date today, if they are equal reclassify them as alive
+        tmp$death <- dplyr::if_else(tmp$EndDate==Sys.Date(), 0, tmp$death)
+        
+        ## this is very important, this will only censor the data if the end date
+        ## occurs in the time interval
+        tmp$death <- ifelse(tmp$EndDate %within% int & tmp[[censor_col]]==TRUE, 
+                            0, tmp$death)
+        
+        tmp$period <- paste0(surv.period, "_", s.yr[i])        
+      }
+      
+      
+      return(tmp)
+    }
+    
+    # Call your inner function and store the result for the current year
+    result <- inner_function()
+    results_list[[i]] <- result
+  }
+  
+  # Combine the results into a single data frame
+  final_result <- do.call(rbind, results_list)
+  
+  return(final_result)
+}
