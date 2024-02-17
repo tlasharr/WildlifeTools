@@ -1,20 +1,20 @@
 ## function to set up the survival data for adults
 ## you can run this for multiple years if you make s.yr and e.yr vectors
 
-surv.prep.adults <- function(start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
-                                      s.yr, ## the year for the start date
-                                      end.date, ## start date for the season, formated 'b-d' (e.g., "Dec-31")
-                                      e.yr, ## the year for the end date
-                                      data, ## data with date_on_col, a date_off_col, a censor column
-                                      date_on_col = "StartDate", ## date the collar was deployed column
-                                      date_off_col = "EndDate", ## date the collar came off column
-                                      censor_col = "Censor", ## the censor column name
-                                      bcol = "BirthYear", ## column that has birth year
-                                      id = "AID", ## column that unique identifier
-                                      sameage = FALSE, ## if you have differences in age classes in your data (i.e., juveniles and adults)
-                                      surv.period = "bioyear", ## change this to whatever you want your time period to be labeled as (i.e., winter, summer, bioyear)
-                                      mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
-                                      days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
+surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a censor column,
+                             start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
+                             s.yr, ## the year for the start date
+                             end.date, ## start date for the season, formated 'b-d' (e.g., "Dec-31")
+                             e.yr, ## the year for the end date
+                             date_on_col = "StartDate", ## date the collar was deployed column
+                             date_off_col = "EndDate", ## date the collar came off column
+                             censor_col = "Censor", ## the censor column name
+                             bcol = "BirthYear", ## column that has birth year
+                             id = "AID", ## column that unique identifier
+                             sameage = FALSE, ## if you have differences in age classes in your data (i.e., juveniles and adults)
+                             surv.period = "bioyear", ## change this to whatever you want your time period to be labeled as (i.e., winter, summer, bioyear)
+                             mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
+                             days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
                                       ) 
   {
 
