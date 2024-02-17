@@ -9,7 +9,10 @@ survival.dynamic.interval <- function(data, ## survival data from previous funct
                                     id = "AID" ## unique identifier for each animal
                                     )
 {
-  result.list <- list()
+  
+require(lubridate)
+
+result.list <- list()
   
   for (i in unique(data[[survival.period]])) {
     
