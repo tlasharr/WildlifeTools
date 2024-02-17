@@ -21,9 +21,6 @@
 #' current season, but it would not add any animals you caught after December 15th (e.g., if you caught 
 #' more in the spring).
 
-#' The survival interval will get you a column that has a start and end number which can be used in the 
-#' survival package functions.
-
 surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a censor column,
                              start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
                              s.yr, ## the year for the start date
@@ -167,8 +164,10 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
           
           start.offset <- 1 - month(sdate)
           end.offset <- 13 - month(sdate)
-          tmp$start.num <- month(tmp$StartDate) + start.offset
-          tmp$end.num <- ifelse(year(tmp$EndDate)==year(tmp$StartDate),
+          tmp$start.num <- ifelse(year(tmp$StartDate)==year(sdate),
+                                  month(tmp$StartDate) + start.offset,
+                                  month(tmp$StartDate) + end.offset)
+          tmp$end.num <- ifelse(year(tmp$EndDate)==year(sdate),
                                 month(tmp$EndDate) + start.offset,
                                 month(tmp$EndDate) + end.offset)
           
@@ -236,8 +235,10 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
 
           start.offset <- 1 - month(sdate)
           end.offset <- 13 - month(sdate)
-          tmp$start.num <- month(tmp$StartDate) + start.offset
-          tmp$end.num <- ifelse(year(tmp$EndDate)==year(tmp$StartDate),
+          tmp$start.num <- ifelse(year(tmp$StartDate)==year(sdate),
+                                  month(tmp$StartDate) + start.offset,
+                                  month(tmp$StartDate) + end.offset)
+          tmp$end.num <- ifelse(year(tmp$EndDate)==year(sdate),
                                 month(tmp$EndDate) + start.offset,
                                 month(tmp$EndDate) + end.offset)
           
