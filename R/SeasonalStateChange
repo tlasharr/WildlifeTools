@@ -1,5 +1,4 @@
-#' This function calculates changes in metrics (fat, disease status, weight, etc.) 
-#' across different seasons. 
+#' This function calculates changes in metrics (fat, disease status, weight, etc.) across different seasons. 
 
 seasonalchange <- function(data, ## data frame of data collected on capture
                            capdate_col = "CapDate", ## name of the date column when the data were collected
