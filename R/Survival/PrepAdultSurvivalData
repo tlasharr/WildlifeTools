@@ -21,6 +21,9 @@
 #' current season, but it would not add any animals you caught after December 15th (e.g., if you caught 
 #' more in the spring).
 
+#' The survival interval will get you a column that has a start and end number which can be used in the 
+#' survival package functions.
+
 surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a censor column,
                              start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
                              s.yr, ## the year for the start date
@@ -34,13 +37,15 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
                              bcol = "BirthYear", ## column that has birth year
                              surv.period = "bioyear", ## change this to whatever you want your time period to be labeled as (i.e., winter, summer, bioyear)
                              mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
-                             days.enter = 45 ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
-                                      ) 
-  {
+                             days.enter = 45, ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
+                             survival.interval = "months" ## can be months, weeks, or days
 
-require(lubridate)
-require(dplyr)
-
+                             ) 
+{
+  
+  require(lubridate)
+  require(dplyr)
+  
   if (any(duplicated(data[[id]]))){
     stop(print("You have duplicate IDs in your your dataframe."))
   }
@@ -80,7 +85,7 @@ require(dplyr)
   
   # Iterate over the years
   for (i in seq_along(s.yr)) {
-
+    
     variable_year_function <- function() {
       if (!inherits(data[, date_on_col], "POSIXct")) 
         stop("date_on_col is not a POSIXct!")
@@ -148,10 +153,33 @@ require(dplyr)
         tmp$death <- ifelse(tmp$EndDate %within% int & tmp[[censor_col]]==TRUE, 
                             0, tmp$death)
         
+        if(survival.interval=="days"){
+          
+          tmp$start.num <- yday(tmp[[date_on_col]]) - (yday(sdate)-1)
+          tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "days")),0)
+          
+        }else if(survival.interval=="weeks"){
+          
+          tmp$start.num <- round(as.numeric(difftime(tmp[[date_on_col]], sdate, units = "weeks")),0)+1
+          tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "weeks")),0)
+          
+        }else if(survival.interval=="months"){
+          
+          start.offset <- 1 - month(sdate)
+          end.offset <- 13 - month(sdate)
+          tmp$start.num <- month(tmp$StartDate) + start.offset
+          tmp$end.num <- ifelse(year(tmp$EndDate)==year(tmp$StartDate),
+                                month(tmp$EndDate) + start.offset,
+                                month(tmp$EndDate) + end.offset)
+          
+        }else{
+          stop(print("Not a Valid Time Interval!"))
+        }
+        
         tmp$period <- paste0(surv.period, "_", yr)
         
       }   
-        ## if the start and end year are the different (e.g., overwinter survival)
+      ## if the start and end year are the different (e.g., overwinter survival)
       else {
         
         ## get the start and end dates for the season
@@ -193,6 +221,30 @@ require(dplyr)
         ## occurs in the time interval
         tmp$death <- ifelse(tmp$EndDate %within% int & tmp[[censor_col]]==TRUE, 
                             0, tmp$death)
+        
+        if(survival.interval=="days"){
+        
+          tmp$start.num <- yday(tmp[[date_on_col]]) - (yday(sdate)-1)
+          tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "days")),0)
+          
+        }else if(survival.interval=="weeks"){
+          
+          tmp$start.num <- round(as.numeric(difftime(tmp[[date_on_col]], sdate, units = "weeks")),0)+1
+          tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "weeks")),0)
+          
+        }else if(survival.interval=="months"){
+
+          start.offset <- 1 - month(sdate)
+          end.offset <- 13 - month(sdate)
+          tmp$start.num <- month(tmp$StartDate) + start.offset
+          tmp$end.num <- ifelse(year(tmp$EndDate)==year(tmp$StartDate),
+                                month(tmp$EndDate) + start.offset,
+                                month(tmp$EndDate) + end.offset)
+          
+        }else{
+          stop(print("Not a Valid Time Interval!"))
+        }
+        
         
         tmp$period <- paste0(surv.period, "_", s.yr[i])        
       }
