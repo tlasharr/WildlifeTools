@@ -1,0 +1,56 @@
+#' Function to create a data frame that can be used in a cox model for juveniles
+#' This function requires a dataframe that has a column for unique ID, the start date of monitoring, the end date of monitoring, the year of birth and if it should be censored
+
+surv.prep.func.fawns <- function(yr, ## year
+                           start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
+                           end.date, ## start date for the season, formated 'b-d' (e.g., "Dec-31")
+                           data, ## data with date_on_col, a date_off_col, a censor column
+                           date_on_col = "StartDate", ## date the collar was deployed column
+                           date_off_col = "EndDate", ## date the collar came off column
+                           censor_col = "Censor", ## the censor column name
+                           year_col = "Summer_Year", ## column for the year they were born
+                           id = "AID" ## column that unique identifier
+
+) {
+
+  if (any(duplicated(data[[id]]))){
+    stop(print("You have duplicate IDs in your your dataframe."))
+  }
+
+  if (!(censor_col %in% names(data))) {
+    stop(print("You have no Censor Column!"))
+  }
+
+  data <- data[data[[year_col]]==yr,]
+  ## get the start and end dates for the season
+  sdate <- as.Date(paste0(yr, "-", start.date), format="%Y-%b-%d")
+  edate <- as.Date(paste0(yr, "-", end.date), format="%Y-%b-%d")
+  
+  ## interval between the start and end
+  int <- lubridate::interval(sdate, edate)
+  
+  ## get all of the animals that were alive and in the study during this time
+  tmp <- data[data[[date_on_col]] < edate & data[[date_off_col]] > sdate,]
+  
+  ## get the start and end date in the tmp data frame for the time period
+  ## we care about
+  tmp$StartDate <- dplyr::if_else(tmp[[date_on_col]] < sdate, 
+                                  as.Date(sdate, format = '%Y-%m-%d'),
+                                  as.Date(tmp[[date_on_col]], format = '%Y-%m-%d'))
+  
+  tmp$EndDate <- dplyr::if_else(tmp[[date_off_col]] > edate, 
+                                as.Date(edate, format = '%Y-%m-%d'),
+                                as.Date(tmp[[date_off_col]], format = '%Y-%m-%d'))
+  
+  tmp$death <- ifelse(tmp$EndDate<edate, 1, 0)
+  tmp$Difftime <- tmp$EndDate - tmp$StartDate
+  
+  ## this is very important, this will only censor the data if the end date
+  ## occurs in the time interval
+  tmp$death <- ifelse(tmp$EndDate %within% int & tmp[[censor_col]]==TRUE, 
+                      0, tmp$death)
+  
+  tmp$SurvivalPeriodYear <- yr
+  
+  return(tmp)
+}
