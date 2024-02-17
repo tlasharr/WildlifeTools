@@ -34,6 +34,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
   {
 
 require(lubridate)
+require(dplyr)
 
   if (any(duplicated(data[[id]]))){
     stop(print("You have duplicate IDs in your your dataframe."))
