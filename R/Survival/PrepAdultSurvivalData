@@ -1,4 +1,9 @@
-#' Function to organize survival data for adults.
+#' Function to organize survival data for adults. It takes a dataframe of all unique individuals you have
+#' and sets up the data so that you can use the survival package easily.
+
+#' You will need a dataframe that has all of your unique individuals, and columns for when you started monitoring
+#' them, when you stopped monitoring them, if their end date should be censored (i.e., collar failures, lost animals)
+#' and their unique id.
 
 #' You can run this for multiple years if you make s.yr and e.yr vectors (e.g., s.yr = 2015:2022)
 
