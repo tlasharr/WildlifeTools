@@ -1,5 +1,14 @@
-## function to set up the survival data for adults
-## you can run this for multiple years if you make s.yr and e.yr vectors
+#' function to set up the survival data for adults
+#' you can run this for multiple years if you make s.yr and e.yr vectors
+
+#' The 'mid.season.enter' and 'days.enter' arguments are to deal with biases that can arise
+#' if you add in a bunch of animals half way through the survival period. By setting 'mid.season.enter'
+#' to FALSE, you're telling the function you don't want to add in every animal that you started monitoring
+#' during the current survival season. You can then set a threshold of how many days into the season you want
+#' to allow animals to join (i.e., if your survival season starts on Dec 1, but you captured a bunch of animals
+#' Dec 10 - 14, you could set 'days.enter' to 15 days and it would add those animals you just caught to the 
+#' current season, but it would not add any animals you caught after December 15th (e.g., if you caught 
+#' more in the spring).
 
 surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a censor column,
                              start.date, ## start date for the season, formated 'b-d' (e.g., "Aug-01")
