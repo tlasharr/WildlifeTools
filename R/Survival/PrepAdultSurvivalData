@@ -60,7 +60,7 @@ require(lubridate)
   # Iterate over the years
   for (i in seq_along(s.yr)) {
 
-    inner_function <- function() {
+    variable_year_function <- function() {
       if (!inherits(data[, date_on_col], "POSIXct")) 
         stop("date_on_col is not a POSIXct!")
       if (!inherits(data[, date_off_col], "POSIXct")) 
@@ -180,12 +180,12 @@ require(lubridate)
       return(tmp)
     }
     
-    # Call your inner function and store the result for the current year
-    result <- inner_function()
+    ## call the variable_year_function and store the result for the current year
+    result <- variable_year_function()
     results_list[[i]] <- result
   }
   
-  # Combine the results into a single data frame
+  ## Combine the results into a single data frame
   final_result <- do.call(rbind, results_list)
   
   return(final_result)
