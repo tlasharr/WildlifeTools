@@ -118,7 +118,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
         int <- lubridate::interval(sdate, edate)
         
         ## get all of the animals that were alive and in the study during this time
-        tmp <- data[data[[date_on_col]] < edate & data[[date_off_col]] > sdate,]
+        tmp <- data[data[[date_on_col]] <= edate & data[[date_off_col]] >= sdate,]
         
         ## if you are limiting the animals that can join the analyses, this 
         ## is the part where it only allows animals that have a start date within
@@ -189,7 +189,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
         int <- lubridate::interval(sdate, edate)
         
         ## get all of the animals that were alive and in the study during this time
-        tmp <- data[data[[date_on_col]] < edate & data[[date_off_col]] > sdate,]
+        tmp <- data[data[[date_on_col]] <= edate & data[[date_off_col]] >= sdate,]
         
         ## if you are limiting the animals that can join the analyses, this 
         ## is the part where it only allows animals that have a start date within
