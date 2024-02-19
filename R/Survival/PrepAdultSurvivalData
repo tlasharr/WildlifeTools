@@ -56,8 +56,10 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
   if(any(is.na(data[[date_off_col]]))){
     print("There were NAs in the EndDate, they were filled in as today's date")
     print("If you are running this for the current season and an animal died today, it will not be classified as dead until you run the function tomorrow.")
-    data[[date_off_col]] <- dplyr::if_else(is.na(data[[date_off_col]]), Sys.Date(), data[[date_off_col]])
-  }
+    data[[date_off_col]] <- dplyr::if_else(is.na((data[[date_off_col]])), as.POSIXct(Sys.Date()), (data[[date_off_col]]))
+
+    }
+
   
   
   if (length(s.yr) != length(e.yr)) {
