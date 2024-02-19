@@ -7,7 +7,7 @@ seasonalchange <- function(data, ## data frame of data collected on capture
                            season2.metrics = c("Preg", "FetalNum"), ## metrics you want to reatin in the dataframe from the second season
                            season1.months = 12, ## this is any of the months you captured animals in the first season
                            season2.months = c(3:4), ## this is any of the months you captured animals in the second season
-                           year.change = TRUE, ## this means that the seasonal change you're interested in occurs across a year
+                           year.change = TRUE, ## this means that the seasonal change you're interested in occurs across two years (i.e., over winter)
                            season1.name = "winter", ## name for the first season
                            season2.name = "spring", ## name for the second season
                            id = "AID" ## unique identifier for animals
