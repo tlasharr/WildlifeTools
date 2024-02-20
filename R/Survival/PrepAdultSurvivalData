@@ -36,8 +36,8 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
                              mid.season.enter = FALSE, ## allow or don't allow animals to enter the survival period after it's begun
                              days.enter = 45, ## if you don't allow all mid season entries, the cutoff at which point you want to not allow more animals to enter (only matters if mid.season.enter = FALSE)
                              survival.interval = "months" ## can be months, weeks, or days
-
-                             ) 
+                             
+) 
 {
   
   require(lubridate)
@@ -59,12 +59,10 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
   
   
   if(any(is.na(data[[date_off_col]]))){
-    print("There were NAs in the EndDate, they were filled in as today's date")
-    print("If you are running this for the current season and an animal died today, it will not be classified as dead until you run the function tomorrow.")
-    data[[date_off_col]] <- dplyr::if_else(is.na((data[[date_off_col]])), as.POSIXct(Sys.Date(), "%Y-%m-%d"), (data[[date_off_col]]))
-
-    }
-
+    print("There were NAs in the EndDate, they were filled in as tomorrow's date, but they are not classified as a mortality.")
+    data[[date_off_col]] <- dplyr::if_else(is.na((data[[date_off_col]])), Sys.Date()+1, (data[[date_off_col]]))
+    
+  }
   
   
   if (length(s.yr) != length(e.yr)) {
@@ -150,7 +148,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
         
         ## this is to deal with the NAs in end dates for current animals
         ## because we gave their end date today, if they are equal reclassify them as alive
-        tmp$death <- dplyr::if_else(tmp$EndDate==Sys.Date(), 0, tmp$death)
+        tmp$death <- dplyr::if_else(tmp$EndDate>=Sys.Date()+1, 0, tmp$death)
         
         ## this is very important, this will only censor the data if the end date
         ## occurs in the time interval
@@ -221,7 +219,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
         
         ## this is to deal with the NAs in end dates for current animals
         ## because we gave their end date today, if they are equal reclassify them as alive
-        tmp$death <- dplyr::if_else(tmp$EndDate==Sys.Date(), 0, tmp$death)
+        tmp$death <- dplyr::if_else(tmp$EndDate>=Sys.Date()+1, 0, tmp$death)
         
         ## this is very important, this will only censor the data if the end date
         ## occurs in the time interval
@@ -229,7 +227,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
                             0, tmp$death)
         
         if(survival.interval=="days"){
-        
+          
           tmp$start.num <- yday(tmp[[date_on_col]]) - (yday(sdate)-1)
           tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "days")),0)
           
@@ -239,7 +237,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
           tmp$end.num <- round(as.numeric(difftime(tmp[[date_off_col]], tmp[[date_on_col]], units = "weeks")),0)
           
         }else if(survival.interval=="months"){
-
+          
           start.offset <- 1 - month(sdate)
           end.offset <- 13 - month(sdate)
           tmp$start.num <- ifelse(year(tmp$StartDate)==year(sdate),
