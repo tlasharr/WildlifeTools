@@ -60,7 +60,7 @@ surv.prep.adults <- function(data, ## data with date_on_col, a date_off_col, a c
   
   if(any(is.na(data[[date_off_col]]))){
     print("There were NAs in the EndDate, they were filled in as tomorrow's date, but they are not classified as a mortality.")
-    data[[date_off_col]] <- dplyr::if_else(is.na((data[[date_off_col]])), Sys.Date()+1, (data[[date_off_col]]))
+    data[[date_off_col]] <- dplyr::if_else(is.na((data[[date_off_col]])), as.POSIXct(Sys.Date()+2), (data[[date_off_col]]))
     
   }
   
